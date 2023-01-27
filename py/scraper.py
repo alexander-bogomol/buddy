@@ -43,7 +43,9 @@ def plot_scraping(url):
                     .strip())
     except Exception:
         return f'cannot parse this url: {url}'
-    
+        
+    # If title var is not empty and plot string has at least 70 char.
+    # If less, than a model won't be able to extract something usefull.
     if len(title) != 0 and len(short + plot) > 70:
         title2plot_dict[title] = short + ' \n' + plot
         return
