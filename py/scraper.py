@@ -7,7 +7,9 @@ from multiprocessing import Pool, Manager
 url_all_films = 'https://www.spoilertime.ru/index.php/arkhiv'
 req_all_films = requests.get(url_all_films)
 soup_all_films = BeautifulSoup(req_all_films.text, 'html.parser')
-all_films_titles = soup_all_films.find_all('h3', {"class": "page-header item-title"})
+all_films_titles = soup_all_films.find_all(
+    'h3', {"class": "page-header item-title"})
+
 print('There are', len(all_films_titles), 'titles')
 
 # Create full url for each movie
@@ -26,37 +28,43 @@ def plot_scraping(url):
         soup = BeautifulSoup(req.text, 'html.parser')
     except Exception:
         return f'cannot request this: {url}!'
-    
+
     try:
         title = (soup.section
                      .ul
-                     .find_all('li', {"class": "active"}, itemprop="itemListElement")[-1]
+                     .find_all('li',
+                               {"class": "active"},
+                               itemprop="itemListElement")[-1]
                      .get_text()
                      .strip())
 
-        short = (soup.find('div', {"style": "overflow: hidden;padding-bottom: 20px;"})
+        short = (soup.find('div',
+                           {"style": "overflow: hidden;padding-bottom: 20px;"})
                      .get_text()
                      .strip())
-    
+
         plot = (soup.find_all('div', {"class": "leading-1"})[0]
                     .get_text()
                     .strip())
     except Exception:
         return f'cannot parse this url: {url}'
-        
+
     # If title var is not empty and plot string has at least 70 char.
     # If less, than a model won't be able to extract something usefull.
     if len(title) != 0 and len(short + plot) > 70:
         title2plot_dict[title] = short + ' \n' + plot
-        return
+        return None
     else:
         return f'cannot get title or plot from: {url}'
+
 
 if __name__ == '__main__':
     with Pool(11) as p:
         exceptions_list.append(p.map(plot_scraping, links))
 
-print('Scrapping done! There are', len(dict(title2plot_dict)), 'scrapped movies')
+print(
+    'Scrapping done! There are', len(dict(title2plot_dict)),
+    'scrapped movies')
 
 # Create dataframe and write it to csv
 df = pd.DataFrame(columns=['title', 'plot'], data=title2plot_dict.items())
